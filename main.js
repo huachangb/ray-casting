@@ -12,33 +12,24 @@ window.onload = () => {
 window.addEventListener("keydown", move);
 
 function move(e) {
-    let newX = game.player.x;
-    let newY = game.player.y;
-
     switch(e.keyCode) {
         case 37:
             // left arrow key
-            newX -= game.player.speed; 
+            game.player.turn("left");
             break;
         case 38:
-            // up array key
-            newY -= game.player.speed; 
+            // up array key - forward
+            game.movePlayer("forward")
             break;
         case 39:
             // right arrow key
-            newX += game.player.speed; 
+            game.player.turn("right"); 
             break;
         case 40:
-            // down arrow key
-            newY += game.player.speed; 
-            break; 
+            // down arrow key - backward
+            game.movePlayer("backward")
+            break;
         default:
             return;
     }
-
-    // check if new position valid
-    if ((newX < 0 || newX > game.canvas.width) || 
-        (newY < 0 || newY > game.canvas.height) ||
-        (!game.playerCanMoveTo(newX, newY))) return;
-    game.player.move(newX, newY);
 }

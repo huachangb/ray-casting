@@ -20,6 +20,26 @@ class Game {
         this.drawPlayer();
     }
 
+    movePlayer(direction) {
+        let speed = this.player.speed;
+        
+        if (direction == "backward") {
+            speed = -speed;
+        }
+
+        let theta = this.player.orientation;
+        let newX = this.player.x + speed * Math.cos(Math.PI * theta / 180.0);
+        let newY = this.player.y + speed * Math.sin(Math.PI * theta / 180.0);
+
+        // check if valid position
+        if ((newX < 0 || newX > game.canvas.width) || 
+            (newY < 0 || newY > game.canvas.height) ||
+            (!this.playerCanMoveTo(newX, newY))) return;
+
+        
+        this.player.move(newX, newY);
+    }
+
     playerCanMoveTo(x, y) {
         // check if new position is inside wall
         let j = Math.floor(x / 50);
@@ -27,10 +47,18 @@ class Game {
         return this.matrix[i][j] == 0;
     }
 
-    drawPlayer() {
+    drawPlayer(direction=true) {
         this.ctx.beginPath();
         this.ctx.arc(this.player.x, this.player.y, this.player.r, 0, 2 * Math.PI);
         this.ctx.stroke();
+
+        if (direction) {
+            let theta = this.player.orientation;
+            let len = 25
+            let endX = this.player.x + len * Math.cos(Math.PI * theta / 180.0);
+            let endY = this.player.y + len * Math.sin(Math.PI * theta / 180.0);
+            this.drawLine(this.player.x, this.player.y, endX, endY);
+        }
     }
 
     drawWalls() {
