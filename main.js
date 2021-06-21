@@ -1,11 +1,14 @@
-let canvas, ctx, player, game;
+let canvas, ctx, player, game, output;
 
 window.onload = () => {
     canvas = document.getElementById("canvas");
     ctx = canvas.getContext("2d");
     player = new Player(260, 277);
 
-    game = new Game(ctx, canvas, player);
+    // output
+    output = document.getElementById("output");
+
+    game = new Game(ctx, canvas, player, output);
     game.start();
 };
 

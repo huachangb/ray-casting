@@ -1,11 +1,16 @@
 class Game {
-    constructor(ctx, canvas, player, cellWidth=50, cellHeight=50) {
+    constructor(ctx, canvas, player, output, cellWidth=50, cellHeight=50) {
         this.ctx = ctx;
         this.canvas = canvas;
         this.player = player;
         this.matrix = this.createWalls();
         this.cellWidth = cellWidth;
         this.cellHeight = cellHeight;
+
+        this.output = output;
+        this.outputCtx = output.getContext("2d");
+        this.outputDistanceMax = Math.sqrt(output.height**2 + output.width**2);
+        this.outputWidthPerRay = output.width / player.nrays;
     }
 
     /**
@@ -23,9 +28,10 @@ class Game {
      */
     update() {
         // clear canvas
-        this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.drawWalls();
         this.drawPlayer();
+        this.drawOutput();
     }
 
     /**
@@ -184,6 +190,54 @@ class Game {
             [1,0,1,0,0,1,0,0,0,1],
             [1,1,1,1,1,1,1,1,1,1]
         ];
+    }
+    
+    /**
+     * Draws output
+     */
+    drawOutput() {
+        // clear canvas
+        this.outputCtx.clearRect(0, 0, this.output.width, this.output.height);
+
+        let x_offset = 0;
+        let m = this.output.height;
+
+        let middle = this.player.rays[0];
+        let right = this.player.rays.slice(1, this.player.raysPerSide + 1);
+        let left = this.player.rays.slice(this.player.raysPerSide + 1).reverse();
+
+        // re arrange
+        left.push(middle);
+        left.push(...right);
+
+        // for (let i = this.player.nrays - 1; i >= 0; i--) {
+        for (let i = 0 ; i < left.length; i++) {
+            let distance = left[i].length;
+            let height = m + (((-m) / this.outputDistanceMax) * distance);
+            let y_offset = (this.output.height - height) / 2;
+
+            this.drawRectangle(x_offset, y_offset, height, distance);
+
+            x_offset += this.outputWidthPerRay;
+        }
+    }
+
+    /**
+     * Draws rectangle on output canvas
+     */
+    drawRectangle(startX, startY, height, distance) {
+        this.outputCtx.beginPath();
+        // this.outputCtx.rect(startX, startY, this.outputWidthPerRay, height);
+        this.outputCtx.fillStyle = this.determineColor(distance);
+        this.outputCtx.fillRect(startX, startY, this.outputWidthPerRay, height);
+        this.outputCtx.closePath();
+    }
+
+    determineColor(distance) {
+        let high = 1;
+        let low = 0.28;
+        let a = low + (((high - low) / this.output.height) * distance);
+        return `rgba(0, 0, 0, ${a})`;
     }
 
     /**

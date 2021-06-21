@@ -1,5 +1,5 @@
 class Player {
-    constructor(x, y, radius=10, fov=50, speed=10, turnRate=5, nrays=11) {
+    constructor(x, y, radius=10, fov=50, speed=10, turnRate=5, nrays=61) {
         this.x = x;
         this.y = y;
         this.r = radius;
@@ -12,18 +12,18 @@ class Player {
         this.rayOrientations = new Array(nrays);
 
         let rotationPerRay = fov / (nrays - 1);
-        let raysPerSide = (nrays - 1) / 2;
+        this.raysPerSide = (nrays - 1) / 2;
 
         // filll orientation array
         for (let i = 0; i < nrays; i++) {
             let theta = 0;
 
-            if (i >= 1 && i < raysPerSide + 1) {
+            if (i >= 1 && i < this.raysPerSide + 1) {
                 theta = i * -rotationPerRay;
-            } else if (i > raysPerSide) {
-                theta = (i - raysPerSide) * rotationPerRay;
+            } else if (i > this.raysPerSide) {
+                theta = (i - this.raysPerSide) * rotationPerRay;
             }
-            console.log(theta);
+
             this.rayOrientations[i] = this.orientation + theta;
         }
     }

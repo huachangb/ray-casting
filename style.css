@@ -1,3 +1,7 @@
-canvas#canvas {
+canvas {
     border: 1px solid black;
+}
+
+canvas#output {
+    /* background-color: black; */
 }
