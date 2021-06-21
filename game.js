@@ -9,7 +9,6 @@ class Game {
 
         this.output = output;
         this.outputCtx = output.getContext("2d");
-        this.outputDistanceMax = Math.sqrt(output.height**2 + output.width**2);
         this.outputWidthPerRay = output.width / player.nrays;
     }
 
@@ -199,12 +198,6 @@ class Game {
         // clear canvas
         this.outputCtx.clearRect(0, 0, this.output.width, this.output.height);
 
-        // set background color
-        // this.outputCtx.globalCompositeOperation = "destination-over";
-        // this.outputCtx.fillStyle = "black";
-        // this.outputCtx.fillRect(0, 0, this.output.width, this.output.height);
-        // this.outputCtx.globalCompositeOperation = "source-over";
-
         let x_offset = 0;
         let m = this.output.height;
 
@@ -212,15 +205,13 @@ class Game {
         let right = this.player.rays.slice(1, this.player.raysPerSide + 1);
         let left = this.player.rays.slice(this.player.raysPerSide + 1).reverse();
 
-        // re arrange
+        // re-arrange so that the rendered view is correct
         left.push(middle);
         left.push(...right);
 
         let frame_slices = left.reverse();
-
         let maxHeight = this.output.height - 150;
 
-        // for (let i = this.player.nrays - 1; i >= 0; i--) {
         for (let i = 0 ; i < frame_slices.length; i++) {
             let distance = frame_slices[i].length;
             let height = m + (((-m) / maxHeight) * distance);
@@ -237,7 +228,6 @@ class Game {
      */
     drawRectangle(startX, startY, height, ray) {
         this.outputCtx.beginPath();
-        // this.outputCtx.rect(startX, startY, this.outputWidthPerRay, height);
         this.outputCtx.fillStyle = this.determineColor(ray);
         this.outputCtx.fillRect(startX, startY, this.outputWidthPerRay, height);
         this.outputCtx.closePath();
