@@ -141,13 +141,13 @@ class Game {
         for (let i = 0; i < this.matrix.length; i++) {
             for (let j = 0; j < this.matrix[0].length; j++) {
                 // horizontal walls
-                if (this.matrix[i][j] == 1) {
+                if (this.matrix[i][j] >= 1) {
                     this.drawLine(x, y, x + this.cellWidth, y);
                     this.drawLine(x, y + this.cellHeight, x + this.cellWidth, y + this.cellHeight);
                 }
 
                 // vertical walls
-                if (this.matrix[i][j] == 1) {
+                if (this.matrix[i][j] >= 1) {
                     this.drawLine(x, y, x, y + this.cellHeight);
                     this.drawLine(x + this.cellWidth, y, x + this.cellWidth, y + this.cellHeight);
                 }
@@ -179,16 +179,16 @@ class Game {
      */
     createWalls() {
         return [
-            [1,1,1,1,1,1,1,1,1,1],
-            [1,0,1,0,0,0,0,0,0,1],
-            [1,0,1,0,0,1,0,0,0,1],
-            [1,0,1,1,1,1,1,1,0,1],
-            [1,0,0,1,0,0,0,0,0,1],
-            [1,0,1,1,0,0,0,0,0,1],
-            [1,0,0,0,0,1,0,1,1,1],
-            [1,0,1,0,0,1,0,0,0,1],
-            [1,0,1,0,0,1,0,0,0,1],
-            [1,1,1,1,1,1,1,1,1,1]
+            [1,1,1,2,2,2,3,3,3,1],
+            [1,0,3,0,0,0,0,0,0,1],
+            [1,0,2,0,0,1,0,0,0,1],
+            [1,0,1,2,1,2,3,2,0,2],
+            [1,0,0,3,0,0,0,0,0,2],
+            [1,0,1,2,0,0,0,0,0,2],
+            [1,0,0,0,0,1,0,1,2,3],
+            [1,0,3,0,0,2,0,0,0,3],
+            [1,0,2,0,0,3,0,0,0,3],
+            [1,1,1,1,1,1,1,1,1,2]
         ];
     }
     
@@ -198,6 +198,12 @@ class Game {
     drawOutput() {
         // clear canvas
         this.outputCtx.clearRect(0, 0, this.output.width, this.output.height);
+
+        // set background color
+        // this.outputCtx.globalCompositeOperation = "destination-over";
+        // this.outputCtx.fillStyle = "black";
+        // this.outputCtx.fillRect(0, 0, this.output.width, this.output.height);
+        // this.outputCtx.globalCompositeOperation = "source-over";
 
         let x_offset = 0;
         let m = this.output.height;
@@ -210,13 +216,17 @@ class Game {
         left.push(middle);
         left.push(...right);
 
+        let frame_slices = left.reverse();
+
+        let maxHeight = this.output.height - 150;
+
         // for (let i = this.player.nrays - 1; i >= 0; i--) {
-        for (let i = 0 ; i < left.length; i++) {
-            let distance = left[i].length;
-            let height = m + (((-m) / this.outputDistanceMax) * distance);
+        for (let i = 0 ; i < frame_slices.length; i++) {
+            let distance = frame_slices[i].length;
+            let height = m + (((-m) / maxHeight) * distance);
             let y_offset = (this.output.height - height) / 2;
 
-            this.drawRectangle(x_offset, y_offset, height, distance);
+            this.drawRectangle(x_offset, y_offset, height, frame_slices[i]);
 
             x_offset += this.outputWidthPerRay;
         }
@@ -225,19 +235,31 @@ class Game {
     /**
      * Draws rectangle on output canvas
      */
-    drawRectangle(startX, startY, height, distance) {
+    drawRectangle(startX, startY, height, ray) {
         this.outputCtx.beginPath();
         // this.outputCtx.rect(startX, startY, this.outputWidthPerRay, height);
-        this.outputCtx.fillStyle = this.determineColor(distance);
+        this.outputCtx.fillStyle = this.determineColor(ray);
         this.outputCtx.fillRect(startX, startY, this.outputWidthPerRay, height);
         this.outputCtx.closePath();
     }
 
-    determineColor(distance) {
+    determineColor(ray) {
+        let rgb;
+        let cellVal = this.matrix[ray.i][ray.j];
+        let horizontal = ray.viewHorizontal;
+
+        if (cellVal == 1) {
+            rgb = horizontal ? "40, 90, 0" : "255, 244, 0";
+        } else if (cellVal == 2) {
+            rgb = horizontal ? "21, 0, 255" : "191, 0, 255";
+        } else {
+            rgb = horizontal ? "255, 0, 0" : "0, 0, 0";
+        }
+
         let high = 1;
-        let low = 0.28;
-        let a = low + (((high - low) / this.output.height) * distance);
-        return `rgba(0, 0, 0, ${a})`;
+        let low = 0.4;
+        let a = low + (((high - low) / this.output.height) * ray.length);
+        return `rgba(${rgb}, ${a})`;
     }
 
     /**
@@ -276,11 +298,11 @@ class Game {
      * @param {float} theta 
      * @returns RayCast object
      */
-    __newRayCast(lookingUp, obtuseAngle, dx, dy, theta) {
+    __newRayCast(lookingUp, obtuseAngle, dx, dy, theta, i, j) {
         let endX = obtuseAngle ? this.player.x - dx : this.player.x + dx;
 		let endY = lookingUp ? this.player.y - dy : this.player.y + dy;
         let distance = dy / Math.cos(theta * Math.PI / 180);
-        return new RayCast(this.player.x, this.player.y, endX, endY, distance);
+        return new RayCast(this.player.x, this.player.y, endX, endY, distance, i, j, true);
     }
 
 
@@ -336,8 +358,8 @@ class Game {
                     j = this.__getXIndex(vals[1], dx)
 
                     // check if hit wall
-                    if (!this.indexOutOfBound(i, j) && this.matrix[i][j] == 1) {
-                        ray_hor = this.__newRayCast(true, vals[1], dx, dy, theta);
+                    if (!this.indexOutOfBound(i, j) && this.matrix[i][j] >= 1) {
+                        ray_hor = this.__newRayCast(true, vals[1], dx, dy, theta, i, j);
                         break;
                     }
                 }
@@ -364,11 +386,11 @@ class Game {
                     i = Math.trunc(temp);
 
                     // if hit wall create ray
-                    if (!this.indexOutOfBound(i, j) && this.matrix[i][j] == 1) {
+                    if (!this.indexOutOfBound(i, j) && this.matrix[i][j] >= 1) {
                         let endY = this.player.y - dy;
                         let endX = obtuse ? this.player.x - dx : this.player.x + dx;
                         let distance = dx / Math.cos(theta * Math.PI / 180);
-                        ray_vert = new RayCast(this.player.x, this.player.y, endX, endY, distance)
+                        ray_vert = new RayCast(this.player.x, this.player.y, endX, endY, distance, i, j, false);
                         break;
                     }
                 }
@@ -389,8 +411,8 @@ class Game {
                     j = this.__getXIndex(vals[1], dx)
 
                     // check if hit wall
-                    if (!this.indexOutOfBound(i, j) && this.matrix[i][j] == 1) {
-                        ray_hor = this.__newRayCast(false, vals[1], dx, dy, theta);
+                    if (!this.indexOutOfBound(i, j) && this.matrix[i][j] >= 1) {
+                        ray_hor = this.__newRayCast(false, vals[1], dx, dy, theta, i, j);
                         break;
                     }
                 }
@@ -417,11 +439,11 @@ class Game {
                     i = Math.trunc(temp);
 
                     // if hit wall create ray
-                    if (!this.indexOutOfBound(i, j) && this.matrix[i][j] == 1) {
+                    if (!this.indexOutOfBound(i, j) && this.matrix[i][j] >= 1) {
                         let endY = this.player.y + dy;
                         let endX = obtuse ? this.player.x - dx : this.player.x + dx;
                         let distance = dx / Math.cos(theta * Math.PI / 180);
-                        ray_vert = new RayCast(this.player.x, this.player.y, endX, endY, distance)
+                        ray_vert = new RayCast(this.player.x, this.player.y, endX, endY, distance, i, j, false);
                         break;
                     }
                 }

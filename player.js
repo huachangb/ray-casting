@@ -1,5 +1,5 @@
 class Player {
-    constructor(x, y, radius=10, fov=50, speed=10, turnRate=5, nrays=61) {
+    constructor(x, y, radius=10, fov=70, speed=10, turnRate=5, nrays=121) {
         this.x = x;
         this.y = y;
         this.r = radius;

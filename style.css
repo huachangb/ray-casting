@@ -2,6 +2,17 @@ canvas {
     border: 1px solid black;
 }
 
-canvas#output {
-    /* background-color: black; */
+div.container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#txt2D, #txt3D {
+    display: inline;
+}
+
+div#txtBar {
+    display: flex;
+    justify-content: space-between;
 }

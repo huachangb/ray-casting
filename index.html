@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>Ray casting</title>
+        <title>2D ray casting</title>
         <link rel="stylesheet" href="style.css">
 
         <!-- Load scripts -->
@@ -12,7 +12,30 @@
         <script src="main.js"></script>
     </head>    
     <body>
-        <canvas id="canvas" width="500" height="500"></canvas>
-        <canvas id="output" width="500" height="500"></canvas>
+        <h1>
+            2D Ray casting
+        </h1>
+        <p>
+            This is a (very simple) JavaScript implementation of 2d ray casting. 2d ray casting has been used in older games, such as Wolfenstein 3D, to render a 3d world based on a 2d map.
+        </p>
+        <div class="container">
+            <div id="content">
+                <div id="txtBar">
+                    <h2 id="txt2D">2D map</h2>
+                    <h2 id="txt3D">Rendered 3D perspective</h2>
+                </div>
+                <canvas id="canvas" width="500" height="500"></canvas>
+                <canvas id="output" width="800" height="500"></canvas>
+            </div>
+        </div>
+        <div class="container">
+            <div id="manual">
+                <h2>Controls</h2>
+                <p>&uarr; Move forward</p>
+                <p>&darr; Move backward</p>
+                <p>&larr; Turn to the left</p>
+                <p>&rarr; Turn to the right</p>
+            </div>
+        </div>
     </body>
 </html>
