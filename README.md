@@ -12,7 +12,7 @@ This is a (very simple) JavaScript implementation of 2d ray casting. 2d ray cast
 # Adjustments
 Some attributes can be adjusted very easily. 
 
-### Change more rays
+### Change amount rays
 Change ```nrays``` when creating a player object. See ```player.js```.
 
 ### Change field of view (FOV)
