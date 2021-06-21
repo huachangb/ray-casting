@@ -9,6 +9,7 @@ class Game {
     }
 
     start(interval=15) {
+        this.calculateRays();
         this.update();
         setInterval(this.update.bind(this), interval);
     }
@@ -18,6 +19,11 @@ class Game {
         this.ctx.clearRect(0, 0, canvas.width, canvas.height);
         this.drawWalls();
         this.drawPlayer();
+    }
+
+    turnPlayer(direction) {
+        this.player.turn(direction);
+        this.calculateRays();
     }
 
     movePlayer(direction) {
@@ -38,6 +44,7 @@ class Game {
 
         
         this.player.move(newX, newY);
+        this.calculateRays();
     }
 
     getCellIndices(x, y) {
@@ -59,7 +66,7 @@ class Game {
 
         if (direction) {
             let theta = this.player.orientation;
-            let len = 100
+            let len = 20;
             let endX = this.player.x + len * Math.cos(Math.PI * theta / 180.0);
             let endY = this.player.y + len * Math.sin(Math.PI * theta / 180.0);
             this.drawLine(this.player.x, this.player.y, endX, endY);
@@ -71,7 +78,15 @@ class Game {
     }
 
     drawRays() {
+        if (this.player.rays == null) return;
 
+        for (let i = 0; i < this.player.rays.length; i++) {
+            this.ctx.moveTo(this.player.rays[i].startX, this.player.rays[i].startY);
+            this.ctx.lineTo(this.player.rays[i].endX, this.player.rays[i].endY);
+            this.ctx.strokeStyle = "#FF0000";
+            this.ctx.stroke();
+            this.ctx.strokeStyle = "#000000";
+        }
     }
 
     drawWalls() {
@@ -126,119 +141,111 @@ class Game {
                 (j < 0 ||j > this.matrix[0].length);
     }
 
+    __getXIndex(obtuseAngle, dx) {
+        let newX;
+        if (obtuseAngle) {
+            newX = (this.player.x - dx) / this.cellWidth;
+        } else {
+            newX = (this.player.x + dx) / this.cellWidth;
+        }
+        return Math.trunc(newX);
+    }
+
+    __newRayCast(lookingUp, obtuseAngle, dx, dy, theta) {
+        let endX = obtuseAngle ? this.player.x - dx : this.player.x + dx;
+		let endY = lookingUp ? this.player.y - dy : this.player.y + dy;
+        let distance = dy / Math.cos(theta * Math.PI / 180);
+        return new RayCast(this.player.x, this.player.y, endX, endY, distance);
+    }
+
+
+    // checks if angle obtuse
+    // returns adjusted theta and whether angle is obtuse
+    __adjust_theta(theta) {
+        let obtuse = false;
+
+        // if obtuse
+        if (theta > 90) {
+            theta -= 90;
+            obtuse = true;
+        } else {
+            theta = 90 - theta;
+        }
+        return [theta, obtuse];
+    }
+
     calculateRays() {
         let rays = new Array(this.player.nrays);
         let pos = this.getCellIndices(this.player.x, this.player.y);
-        let dx, dy, c, theta, i ,j;
         let maxDepth = 8;
 
         for (let raynum = 0; raynum < this.player.nrays; raynum++) {
-            theta = this.player.orientation;
+            let theta = this.player.orientation;
+            let dx, dy, i, j, vals;
+
+            // temp until vertical checking
+            if (theta == 0 || theta == 180) {
+                this.player.rays = null;
+                return;
+            }
 
             // looking up
             if (theta < 0) {
                 // check horizontally
-                let secondQuadrant = false;
-                theta = Math.abs(theta);
-                
-                // if in second quadrant
-                if (theta > 90) {
-                    theta -= 90;
-                    secondQuadrant = true;
-                } else {
-                    theta = 90 - theta;
-                }
-                console.log(`Theta: ${theta}`);
+                vals = this.__adjust_theta(Math.abs(theta));
+                theta = vals[0];
 
                 for (let depth = 0; depth < maxDepth; depth++) {
                     if (pos[0] - depth < 0) {
                         break;
                     }
-                    // distance on y-axis
+                    // distance on y-axis and x-axis
                     dy =  this.player.y - ((pos[0] - depth) * this.cellHeight);
-                    // distance on x-axis
                     dx = Math.tan(theta * Math.PI/ 180) * dy;
-                    // distance to wall
-                    c = dy / Math.cos(theta * Math.PI / 180);
-                    console.log(`dx: ${dx}, dy: ${dy}, c: ${c}`);
 
-                    // get y coordinate
+                    // get coordinates
                     i = pos[0] - 1 * (depth + 1);
-
-                    // get x coordinate
-                    if (secondQuadrant) {
-                        console.log((this.player.x - dx) / this.cellWidth);
-                        j = Math.trunc((this.player.x - dx) / this.cellWidth);
-                        console.log(j);
-                    } else {
-                        console.log((this.player.x + dx) / this.cellWidth);
-                        j = Math.trunc((this.player.y + dx) / this.cellWidth);
-                        console.log(j);
-                    }
+                    j = this.__getXIndex(vals[1], dx)
 
                     // check if out of bound
-                    if (this.indexOutOfBound(i, j)) return;
+                    if (this.indexOutOfBound(i, j)) break;
 
                     // check if hit wall
                     if (this.matrix[i][j] == 1) {
-                        console.log("hit a wall");
-                        console.log(`x: ${j}, y: ${i}`);
+                        rays[raynum] = this.__newRayCast(true, vals[1], dx, dy, theta);
                         break;
                     }
-                    console.log(`x: ${j}, y: ${i}`);
                 }
             }
             // looking down
             else if (theta > 0) {
                 // check horizontally
-                let thirdQuadrant = false;
-                theta = Math.abs(theta);
-                
-                // if in second quadrant
-                if (theta > 90) {
-                    theta -= 90;
-                    thirdQuadrant = true;
-                } else {
-                    theta = 90 - theta;
-                }
-                console.log(`Theta: ${theta}`);
+                vals = this.__adjust_theta(theta);
+                theta = vals[0];
 
                 for (let depth = 0; depth < maxDepth; depth++) {
                     if (pos[0] + depth > this.matrix.length) {
                         break;
                     }
-                    // distance on y-axis
-                    dy =  (pos[0] + 1 + depth) * this.cellHeight - this.player.y;
-                    // distance on x-axis
-                    dx = Math.tan(theta * Math.PI / 180) * dy;
-                    // distance to wall
-                    c = dy / Math.cos(theta * Math.PI / 180);
-                    console.log(`dx: ${dx}, dy: ${dy}, c: ${c}`);
+                    // distance on y-axis and x-axis
+                    dy = ((pos[0] + 1 + depth) * this.cellHeight) - this.player.y;
+                    dx = Math.tan(theta * Math.PI/ 180) * dy;
 
-                    // get y coordinate
-                    
-                    console.log(`Q3: ${thirdQuadrant}`);
-                    // get x coordinate
-                    if (thirdQuadrant) {
-                        j = pos[0] - 1 * (depth + 1);
-                        i = pos[1] + Math.ceil(dx / this.cellWidth);
-                    } else {
-                        i = pos[0] + 1 * (depth + 1);
-                        j = pos[1] - Math.floor(dx / this.cellWidth);
-                    }
+                    // get coordinates
+                    i = pos[0] + 1 * (depth + 1);
+                    j = this.__getXIndex(vals[1], dx)
 
                     // check if out of bound
-                    if (this.indexOutOfBound(i, j)) return;
+                    if (this.indexOutOfBound(i, j)) break;
 
                     // check if hit wall
                     if (this.matrix[i][j] == 1) {
-                        console.log("hit a wall");
-                        console.log(`x: ${j}, y: ${i}`);
+                        rays[raynum] = this.__newRayCast(false, vals[1], dx, dy, theta);
                         break;
                     }
-                    console.log(`x: ${j}, y: ${i}`);
                 }
             }
         }
+        this.player.rays = (rays[0] == undefined) ? null : rays;
     }
 }

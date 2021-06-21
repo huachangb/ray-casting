@@ -15,7 +15,7 @@ function move(e) {
     switch(e.keyCode) {
         case 37:
             // left arrow key
-            game.player.turn("left");
+            game.turnPlayer("left");
             break;
         case 38:
             // up array key - forward
@@ -23,7 +23,7 @@ function move(e) {
             break;
         case 39:
             // right arrow key
-            game.player.turn("right"); 
+            game.turnPlayer("right"); 
             break;
         case 40:
             // down arrow key - backward
