@@ -196,9 +196,6 @@ class Game {
                 theta = vals[0];
 
                 for (let depth = 0; depth < maxDepth; depth++) {
-                    if (pos[0] - depth < 0) {
-                        break;
-                    }
                     // distance on y-axis and x-axis
                     dy =  this.player.y - ((pos[0] - depth) * this.cellHeight);
                     dx = Math.tan(theta * Math.PI/ 180) * dy;
@@ -207,11 +204,8 @@ class Game {
                     i = pos[0] - 1 * (depth + 1);
                     j = this.__getXIndex(vals[1], dx)
 
-                    // check if out of bound
-                    if (this.indexOutOfBound(i, j)) break;
-
                     // check if hit wall
-                    if (this.matrix[i][j] == 1) {
+                    if (!this.indexOutOfBound(i, j) && this.matrix[i][j] == 1) {
                         rays[raynum] = this.__newRayCast(true, vals[1], dx, dy, theta);
                         break;
                     }
@@ -224,9 +218,6 @@ class Game {
                 theta = vals[0];
 
                 for (let depth = 0; depth < maxDepth; depth++) {
-                    if (pos[0] + depth > this.matrix.length) {
-                        break;
-                    }
                     // distance on y-axis and x-axis
                     dy = ((pos[0] + 1 + depth) * this.cellHeight) - this.player.y;
                     dx = Math.tan(theta * Math.PI/ 180) * dy;
@@ -235,11 +226,8 @@ class Game {
                     i = pos[0] + 1 * (depth + 1);
                     j = this.__getXIndex(vals[1], dx)
 
-                    // check if out of bound
-                    if (this.indexOutOfBound(i, j)) break;
-
                     // check if hit wall
-                    if (this.matrix[i][j] == 1) {
+                    if (!this.indexOutOfBound(i, j) && this.matrix[i][j] == 1) {
                         rays[raynum] = this.__newRayCast(false, vals[1], dx, dy, theta);
                         break;
                     }
