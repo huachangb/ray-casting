@@ -3,7 +3,7 @@ let canvas, ctx, player, game;
 window.onload = () => {
     canvas = document.getElementById("canvas");
     ctx = canvas.getContext("2d");
-    player = new Player(80, 80);
+    player = new Player(260, 277);
 
     game = new Game(ctx, canvas, player);
     game.start();
