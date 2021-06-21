@@ -33,7 +33,7 @@ class Game {
             speed = -speed;
         }
 
-        let theta = this.player.orientation;
+        let theta = this.player.rayOrientations[0];
         let newX = this.player.x + speed * Math.cos(Math.PI * theta / 180.0);
         let newY = this.player.y + speed * Math.sin(Math.PI * theta / 180.0);
 
@@ -65,7 +65,7 @@ class Game {
         this.ctx.stroke();
 
         if (direction) {
-            let theta = this.player.orientation;
+            let theta = this.player.rayOrientations[0];
             let len = 20;
             let endX = this.player.x + len * Math.cos(Math.PI * theta / 180.0);
             let endY = this.player.y + len * Math.sin(Math.PI * theta / 180.0);
@@ -80,7 +80,8 @@ class Game {
     drawRays() {
         if (this.player.rays == null) return;
 
-        for (let i = 0; i < this.player.rays.length; i++) {
+        for (let i = 0; i < this.player.nrays; i++) {
+            if (this.player.rays[i] == undefined) continue;
             this.ctx.moveTo(this.player.rays[i].startX, this.player.rays[i].startY);
             this.ctx.lineTo(this.player.rays[i].endX, this.player.rays[i].endY);
             this.ctx.strokeStyle = "#FF0000";
@@ -137,8 +138,8 @@ class Game {
     }
 
     indexOutOfBound(i, j) {
-        return (i < 0 || i > this.matrix.length) || 
-                (j < 0 ||j > this.matrix[0].length);
+        return (i < 0 || i > this.matrix.length - 1) || 
+                (j < 0 ||j > this.matrix[0].length - 1);
     }
 
     __getXIndex(obtuseAngle, dx) {
@@ -180,25 +181,23 @@ class Game {
         let maxDepth = 8;
 
         for (let raynum = 0; raynum < this.player.nrays; raynum++) {
-            let theta = this.player.orientation;
-            let dx, dy, i, j, vals;
+            let theta = this.player.rayOrientations[raynum];
+            let dx, dy, i, j;
 
-            // temp until vertical checking
-            if (theta == 0 || theta == 180) {
-                this.player.rays = null;
-                return;
-            }
+            let ray_hor = null;
+            let ray_vert = null;
+
+            let vals = this.__adjust_theta(Math.abs(theta));
 
             // looking up
-            if (theta < 0) {
+            if (theta <= 0) {
                 // check horizontally
-                vals = this.__adjust_theta(Math.abs(theta));
-                theta = vals[0];
-
                 for (let depth = 0; depth < maxDepth; depth++) {
+                    theta = vals[0];
+                    
                     // distance on y-axis and x-axis
                     dy =  this.player.y - ((pos[0] - depth) * this.cellHeight);
-                    dx = Math.tan(theta * Math.PI/ 180) * dy;
+                    dx = Math.tan(theta * Math.PI / 180) * dy;
 
                     // get coordinates
                     i = pos[0] - 1 * (depth + 1);
@@ -206,18 +205,49 @@ class Game {
 
                     // check if hit wall
                     if (!this.indexOutOfBound(i, j) && this.matrix[i][j] == 1) {
-                        rays[raynum] = this.__newRayCast(true, vals[1], dx, dy, theta);
+                        ray_hor = this.__newRayCast(true, vals[1], dx, dy, theta);
                         break;
                     }
                 }
+
+                // check vertically
+                for (let depth = 0; depth < maxDepth; depth++) {
+                    theta = Math.abs(this.player.rayOrientations[raynum]);
+
+                    let obtuse = false;
+
+                    if (theta > 90) {
+                        obtuse = true;
+                        theta = 180 - theta;
+                        dx = this.player.x - ((pos[1] - depth) * this.cellWidth);
+                        j = pos[1] - 1 * (depth + 1);
+                    } else {
+                        dx = ((pos[1] + 1 + depth) * this.cellWidth) - this.player.x;
+                        j = pos[1] + 1 * (depth + 1);
+                    }
+
+                    dy = Math.tan(theta * Math.PI / 180) * dx;
+
+                    let temp = (this.player.y - dy) / this.cellWidth;
+                    i = Math.trunc(temp);
+
+                    // if hit wall create ray
+                    if (!this.indexOutOfBound(i, j) && this.matrix[i][j] == 1) {
+                        let endY = this.player.y - dy;
+                        let endX = obtuse ? this.player.x - dx : this.player.x + dx;
+                        let distance = dx / Math.cos(theta * Math.PI / 180);
+                        ray_vert = new RayCast(this.player.x, this.player.y, endX, endY, distance)
+                        break;
+                    }
+                }
+
             }
             // looking down
             else if (theta > 0) {
                 // check horizontally
-                vals = this.__adjust_theta(theta);
-                theta = vals[0];
-
                 for (let depth = 0; depth < maxDepth; depth++) {
+                    theta = vals[0];
+
                     // distance on y-axis and x-axis
                     dy = ((pos[0] + 1 + depth) * this.cellHeight) - this.player.y;
                     dx = Math.tan(theta * Math.PI/ 180) * dy;
@@ -228,9 +258,60 @@ class Game {
 
                     // check if hit wall
                     if (!this.indexOutOfBound(i, j) && this.matrix[i][j] == 1) {
-                        rays[raynum] = this.__newRayCast(false, vals[1], dx, dy, theta);
+                        ray_hor = this.__newRayCast(false, vals[1], dx, dy, theta);
                         break;
                     }
+                }
+
+                // check vertically
+                for (let depth = 0; depth < maxDepth; depth++) {
+                    theta = this.player.rayOrientations[raynum];
+
+                    let obtuse = false;
+
+                    if (theta > 90) {
+                        obtuse = true;
+                        theta = 180 - theta;
+                        dx = this.player.x - ((pos[1] - depth) * this.cellWidth);
+                        j = pos[1] - 1 * (depth + 1);
+                    } else {
+                        dx = ((pos[1] + 1 + depth) * this.cellWidth) - this.player.x;
+                        j = pos[1] + 1 * (depth + 1);
+                    }
+
+                    dy = Math.tan(theta * Math.PI / 180) * dx;
+
+                    let temp = (this.player.y + dy) / this.cellWidth;
+                    i = Math.trunc(temp);
+
+                    // if hit wall create ray
+                    if (!this.indexOutOfBound(i, j) && this.matrix[i][j] == 1) {
+                        let endY = this.player.y + dy;
+                        let endX = obtuse ? this.player.x - dx : this.player.x + dx;
+                        let distance = dx / Math.cos(theta * Math.PI / 180);
+                        ray_vert = new RayCast(this.player.x, this.player.y, endX, endY, distance)
+                        break;
+                    }
+                }
+            }
+
+            // chech which ray is the shortest
+            // no wall found
+            if (ray_vert == null && ray_hor == null) {
+                rays[raynum] = undefined;
+            }
+            else if (ray_vert == null && ray_hor != null) {
+                // only horizontal wall found
+                rays[raynum] = ray_hor;
+            } else if (ray_vert != null && ray_hor == null) {
+                // only vertical wall found
+                rays[raynum] = ray_vert;
+            } else {
+                // both walls found
+                if (ray_vert.length <= ray_hor.length) {
+                    rays[raynum] = ray_vert;
+                } else {
+                    rays[raynum] = ray_hor;
                 }
             }
         }

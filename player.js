@@ -1,5 +1,5 @@
 class Player {
-    constructor(x, y, radius=10, fov=120, speed=10, turnRate=15, nrays=1) {
+    constructor(x, y, radius=10, fov=50, speed=10, turnRate=5, nrays=11) {
         this.x = x;
         this.y = y;
         this.r = radius;
@@ -9,15 +9,43 @@ class Player {
         this.turnRate = turnRate;
         this.rays = null;
         this.nrays = nrays;
+        this.rayOrientations = new Array(nrays);
+
+        let rotationPerRay = fov / (nrays - 1);
+        let raysPerSide = (nrays - 1) / 2;
+
+        // filll orientation array
+        for (let i = 0; i < nrays; i++) {
+            let theta = 0;
+
+            if (i >= 1 && i < raysPerSide + 1) {
+                theta = i * -rotationPerRay;
+            } else if (i > raysPerSide) {
+                theta = (i - raysPerSide) * rotationPerRay;
+            }
+            console.log(theta);
+            this.rayOrientations[i] = this.orientation + theta;
+        }
     }
 
     turn(direction) {
-        let theta = this.orientation;
+        for (let i = 0; i < this.nrays; i++) {
+            this.rayOrientations[i] = this.__turn(direction, this.rayOrientations[i]);
+        }
+    }
+
+    __turn(direction, orientation) {
+        let theta = orientation;
 
         // calcute new angle
         if (direction === "right") {
             theta = (theta + this.turnRate) % 360;
+        } else if (theta > 0 && theta < this.turnRate) {
+            // edge case if 0 < theta < turn rate
+            // this prevents a turn left to turn right
+            theta -= this.turnRate;
         } else {
+            // 
             let angle = Math.abs(theta - this.turnRate) % 360
             theta = (theta <= 0) ? -angle: angle;
         }
@@ -30,7 +58,8 @@ class Player {
             theta += 360;
         }
 
-        this.orientation = theta;
+        // this.orientation = theta;
+        return theta;
     }
 
     move(newX, newY) {
