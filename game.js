@@ -8,12 +8,19 @@ class Game {
         this.cellHeight = cellHeight;
     }
 
+    /**
+     * Starts updating the canvas at an interval
+     * @param {int} interval Interval at which the canvas should be updated
+     */
     start(interval=15) {
         this.calculateRays();
         this.update();
         setInterval(this.update.bind(this), interval);
     }
 
+    /**
+     * Updates canvas - frame
+     */
     update() {
         // clear canvas
         this.ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -21,11 +28,19 @@ class Game {
         this.drawPlayer();
     }
 
+    /**
+     * Turns player to the left or the right
+     * @param {string} direction direction to turn, can either be 'left' or 'right'
+     */
     turnPlayer(direction) {
         this.player.turn(direction);
         this.calculateRays();
     }
 
+    /**
+     * Moves player's position forward pr backward
+     * @param {string} direction direction to move, can either be 'forward' or 'backward'
+     */
     movePlayer(direction) {
         let speed = this.player.speed;
         
@@ -47,18 +62,35 @@ class Game {
         this.calculateRays();
     }
 
+    /**
+     * Determine which cell indices are associated with position (x, y)
+     * @param {float} x 
+     * @param {flaot} y 
+     * @returns [row, column]
+     */
     getCellIndices(x, y) {
         let j = Math.floor(x / 50);
         let i = Math.floor(y / 50);
         return [i, j];
     }
 
+    /**
+     * 
+     * @param {int} x Column of matrix
+     * @param {int} y Row of matrix
+     * @returns true if spot is empty, else false
+     */
     playerCanMoveTo(x, y) {
         // check if new position is inside wall
         let pos = this.getCellIndices(x, y);
         return this.matrix[pos[0]][pos[1]] == 0;
     }
 
+    /**
+     * 
+     * @param {bool} direction Should draw direction line
+     * @param {bool} rays Should draw rays
+     */
     drawPlayer(direction=true, rays=true) {
         this.ctx.beginPath();
         this.ctx.arc(this.player.x, this.player.y, this.player.r, 0, 2 * Math.PI);
@@ -77,6 +109,9 @@ class Game {
         }
     }
 
+    /**
+     * Draws rays
+     */
     drawRays() {
         if (this.player.rays == null) return;
 
@@ -90,6 +125,9 @@ class Game {
         }
     }
 
+    /**
+     * Draws walls in a matrix
+     */
     drawWalls() {
         let x = 0;
         let y = 0;
@@ -116,12 +154,23 @@ class Game {
 
     }
 
+    /**
+     * Draws a line on a canvas
+     * @param {flaot} startX Starting x position
+     * @param {float} startY Starting y position
+     * @param {flaot} endX Ending x position
+     * @param {float} endY Ending y position
+     */
     drawLine(startX, startY, endX, endY) {
         this.ctx.moveTo(startX, startY);
         this.ctx.lineTo(endX, endY);
         this.ctx.stroke();
     }
 
+    /**
+     * Create a maze in matrix form
+     * @returns 10x10 matrix
+     */
     createWalls() {
         return [
             [1,1,1,1,1,1,1,1,1,1],
@@ -137,11 +186,23 @@ class Game {
         ];
     }
 
+    /**
+     * Check if numbers are within range of index of matrix
+     * @param {int} i 
+     * @param {int} j 
+     * @returns true if index out of range
+     */
     indexOutOfBound(i, j) {
         return (i < 0 || i > this.matrix.length - 1) || 
                 (j < 0 ||j > this.matrix[0].length - 1);
     }
 
+    /**
+     * Helper function to get the index of x in matrix given a dx
+     * @param {bool} obtuseAngle 
+     * @param {float} dx Difference: wall to player
+     * @returns 
+     */
     __getXIndex(obtuseAngle, dx) {
         let newX;
         if (obtuseAngle) {
@@ -152,6 +213,15 @@ class Game {
         return Math.trunc(newX);
     }
 
+    /**
+     * Helper function to create a ray cast
+     * @param {bool} lookingUp 
+     * @param {bool} obtuseAngle 
+     * @param {flaot} dx Difference on x-axis between player and nearby wall
+     * @param {float} dy Difference on y-axis between player and nearby wall
+     * @param {float} theta 
+     * @returns RayCast object
+     */
     __newRayCast(lookingUp, obtuseAngle, dx, dy, theta) {
         let endX = obtuseAngle ? this.player.x - dx : this.player.x + dx;
 		let endY = lookingUp ? this.player.y - dy : this.player.y + dy;
@@ -160,8 +230,11 @@ class Game {
     }
 
 
-    // checks if angle obtuse
-    // returns adjusted theta and whether angle is obtuse
+    /**
+     * Returns adjusted theta by determining whethter the angle is obtuse
+     * @param {float} theta 
+     * @returns adjusted theta as float
+     */
     __adjust_theta(theta) {
         let obtuse = false;
 
@@ -175,6 +248,11 @@ class Game {
         return [theta, obtuse];
     }
 
+    /**
+     * Sends ray casts 
+     * Determines how far the neares wall is
+     * Determines the point of intersection
+     */
     calculateRays() {
         let rays = new Array(this.player.nrays);
         let pos = this.getCellIndices(this.player.x, this.player.y);

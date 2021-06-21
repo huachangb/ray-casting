@@ -28,12 +28,22 @@ class Player {
         }
     }
 
+    /**
+     * Turns player to the left or the right
+     * @param {string} direction Direction to turn to
+     */
     turn(direction) {
         for (let i = 0; i < this.nrays; i++) {
             this.rayOrientations[i] = this.__turn(direction, this.rayOrientations[i]);
         }
     }
 
+    /**
+     * Helper function for turn()
+     * @param {string} direction 
+     * @param {float} orientation 
+     * @returns 
+     */
     __turn(direction, orientation) {
         let theta = orientation;
 
@@ -62,6 +72,11 @@ class Player {
         return theta;
     }
 
+    /**
+     * Moves player to new position
+     * @param {flaot} newX 
+     * @param {flaot} newY 
+     */
     move(newX, newY) {
         this.x = newX;
         this.y = newY;
