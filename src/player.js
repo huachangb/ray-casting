@@ -1,5 +1,15 @@
 class Player {
-    constructor(x, y, radius=10, fov=66, nrays=3, turnRate=30, speed=10) {
+    /**
+     * Constructor for class
+     * @param {float/int} x starting x
+     * @param {float/int} y starting y
+     * @param {float/int} radius size of player
+     * @param {float/int} fov field of view
+     * @param {int} nrays number of rays, must be >= 2
+     * @param {float/int} turnRate degrees player should turn
+     * @param {float/int} speed how many pixels player should move
+     */
+    constructor(x, y, radius=10, fov=66, nrays=5, turnRate=10, speed=10) {
         this.position = new Vector2d([x, y]);
         this.r = radius;
         this.fov = fov;
@@ -28,7 +38,6 @@ class Player {
      */
     turn(direction) {
         let theta = this.turnRate * (direction == "left" ? 1 : -1);
-        console.log(theta);
         theta = to_radians(theta);
 
         // create matrix with row vectors
