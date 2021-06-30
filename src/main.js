@@ -3,9 +3,9 @@ let map2D, perspective3D, game, player;
 window.onload = () => {
     map2D = new GUI("canvas", 500, 500);
     perspective3D = new GUI("output", 500, 500);
-    player = new Player(250, 250);
+    player = new Player(270, 270);
     game = new Game(map2D, player);
-    game.start();
+    // game.start(1000);
 };
 
 window.addEventListener("keydown", move);

@@ -18,6 +18,7 @@ class Player {
         this.direction = new Vector2d([50, 0]);
         this.cameraPlane = new Vector2d([0, this.direction.length() * Math.tan(to_radians(fov / 2))]); // formula is depended on norm of direction vector
         this.rays = new Array(nrays);
+        this.wallHits = new Array(nrays);
 
         // calculate distance between rays on camera plane
         let camLen = this.cameraPlane.length();
