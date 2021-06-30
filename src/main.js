@@ -1,14 +1,10 @@
-let canvas, ctx, player, game, output;
+let map2D, perspective3D, game, player;
 
 window.onload = () => {
-    canvas = document.getElementById("canvas");
-    ctx = canvas.getContext("2d");
-    player = new Player(260, 277);
-
-    // output
-    output = document.getElementById("output");
-
-    game = new Game(ctx, canvas, player, output);
+    map2D = new GUI("canvas", 500, 500);
+    perspective3D = new GUI("output", 500, 500);
+    player = new Player(250, 250);
+    game = new Game(map2D, player);
     game.start();
 };
 
