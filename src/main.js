@@ -4,8 +4,8 @@ window.onload = () => {
     map2D = new GUI("canvas", 500, 500);
     perspective3D = new GUI("output", 500, 500);
     player = new Player(270, 270);
-    game = new Game(map2D, player);
-    game.start(30);
+    game = new Game(map2D, perspective3D, player);
+    game.start();
 };
 
 window.addEventListener("keydown", move);
@@ -17,7 +17,7 @@ function move(e) {
             game.turnPlayer("left");
             break;
         case 38:
-            // up array key - forward
+            // up array key
             game.movePlayer("forward")
             break;
         case 39:
@@ -25,7 +25,7 @@ function move(e) {
             game.turnPlayer("right"); 
             break;
         case 40:
-            // down arrow key - backward
+            // down arrow key
             game.movePlayer("backward")
             break;
         default:

@@ -70,6 +70,7 @@ class Vector2d {
         for (let i = 0; i < this.value.length; i++) {
             result += this.value[i] * v.value[i];
         }
+        
         return result;
     }
 

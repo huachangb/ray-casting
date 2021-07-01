@@ -9,7 +9,7 @@ class Player {
      * @param {float/int} turnRate degrees player should turn
      * @param {float/int} speed how many pixels player should move
      */
-    constructor(x, y, radius=10, fov=66, nrays=5, turnRate=10, speed=10) {
+    constructor(x, y, radius=10, fov=66, nrays=100, turnRate=10, speed=10) {
         this.position = new Vector2d([x, y]);
         this.r = radius;
         this.fov = fov;
@@ -35,19 +35,12 @@ class Player {
 
     /**
      * Rotates player
-     * @param {string} direction to rotate, can either be 'left' or 'right'
+     * @param {string} direction to rotate to, can either be 'left' or 'right'
      */
     turn(direction) {
+        // create rotation matrix
         let theta = this.turnRate * (direction == "left" ? 1 : -1);
-        theta = to_radians(theta);
-
-        // create matrix with row vectors
-        let cosTheta = Math.cos(theta);
-        let sinTheta = Math.sin(theta);
-        let rotationMatrix = [
-            new Vector2d([cosTheta, -sinTheta]),
-            new Vector2d([sinTheta, cosTheta])
-        ]
+        let rotationMatrix = createRotationMatrix(to_radians(theta));
 
         // rotate all vectors
         this.direction = this.direction.transform(rotationMatrix);

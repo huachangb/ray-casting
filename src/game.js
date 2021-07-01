@@ -1,11 +1,12 @@
 class Game {
-    constructor(gui, player) {
+    constructor(gui, output, player, maxSearchDepth=8) {
         this.gui = gui;
+        this.output = output;
         this.player = player;
         this.map = MAP; // see map.js
         this.cellWidth = Math.floor(this.gui.canvas.width / this.map[0].length);
         this.cellHeight = Math.floor(this.gui.canvas.height / this.map.length);
-        this.maxSearchDepth = 8;
+        this.maxSearchDepth = maxSearchDepth;
     }
 
     /**
@@ -21,7 +22,7 @@ class Game {
      * Starts updating the canvas at an interval
      * @param {int} interval update interval in ms
      */
-     start(interval=15) {
+     start(interval=30) {
         this.__calculateRays();
         this.update();
         setInterval(this.update.bind(this), interval);
@@ -67,11 +68,19 @@ class Game {
         }
     }
 
+    /**
+     * Turns player to the left or the right
+     * @param {string} direction 
+     */
     turnPlayer(direction) {
         this.player.turn(direction);
         this.__calculateRays();
     }
 
+    /**
+     * Moves player backward or forward
+     * @param {string} direction 
+     */
     movePlayer(direction) {
         let speed = this.player.speed * (direction == "backward" ? -1 : 1);
         
@@ -87,6 +96,10 @@ class Game {
         this.__calculateRays();
     }
 
+    /**
+     * Gets the coordinates of the player
+     * @returns array with coordinates
+     */
     __getPlayerCoordinates() {
         let x = this.player.position.value[0];
         let y = this.player.position.value[1];
@@ -144,10 +157,27 @@ class Game {
         return Math.trunc(newX);
     }
 
+    /**
+     * Checks if indices indicate wall
+     * @param {int} row 
+     * @param {int} col 
+     * @returns 
+     */
     __hitWall(row, col) {
         return (!this.__indexOutOfBound(row, col) && this.map[row][col] > 0);
     }
 
+    /**
+     * Helper function to create a ray cast
+     * @param {Arrray<int>} playerPos 
+     * @param {float} dx 
+     * @param {float} dy 
+     * @param {Array} projMatrix 
+     * @param {bool} obtuse 
+     * @param {bool} lookingUp 
+     * @param {bool} side 
+     * @returns HittinPoint object
+     */
     __createRayCast(playerPos, dx, dy, projMatrix, obtuse, lookingUp, side) {
         let distVec = new Vector2d([dx, dy]);
         let length = distVec.transform(projMatrix).length();
@@ -156,6 +186,9 @@ class Game {
         return new HittingPoint([newX, newY], side, length);
     }
 
+    /**
+     * Determines if rays hit wall
+     */
     __calculateRays() {
         let xAxisVec = new Vector2d([1, 0]);
         let playerPos = this.player.position;
@@ -182,67 +215,45 @@ class Game {
             let rayCastVertical = undefined;
 
             for (let depth = 0; depth < this.maxSearchDepth; depth++) {
-                // check horizontal
+                // check if ray hits horizontal wall
                 if (rayCastHorizontal == undefined) {
-                    let dyHorizontal = Math.abs((this.cellHeight * (y + (lookingUp ? 0: 1))) - playerPos.value[1]) + depth * this.cellHeight;
-                    let dxHorizontal = dyHorizontal / Math.tan(theta);
-                    let row = y + (depth + (lookingUp ? 1 : 1)) * (lookingUp ? -1 : 1);
-                    let col = this.__getXIndex(obtuse, playerPos.value[0], dxHorizontal);
+                    let dy = Math.abs((this.cellHeight * (y + (lookingUp ? 0: 1))) - playerPos.value[1]) + depth * this.cellHeight;
+                    let dx = dy / Math.tan(theta);
+                    let row = y + (depth + 1) * (lookingUp ? -1 : 1);
+                    let col = this.__getXIndex(obtuse, playerPos.value[0], dx);
 
-                    // check if hit wall
                     if (this.__hitWall(row, col)) {
-                        rayCastHorizontal = this.__createRayCast(
-                            playerPos, 
-                            dxHorizontal, 
-                            dyHorizontal, 
-                            projMatrix, 
-                            obtuse, 
-                            lookingUp, 
-                            0
-                        );
+                        rayCastHorizontal = this.__createRayCast(playerPos, dx, dy, projMatrix, obtuse, lookingUp, 1);
                     }
                 }
                 
-                // check vertical
+                // check if ray hits vertical wall
                 if (rayCastVertical == undefined) {
-                    let dxVertical = Math.abs((this.cellWidth * (x + (obtuse ? 0: 1))) - playerPos.value[0]) + depth * this.cellWidth;
-                    let dyVertical = dxVertical * Math.tan(theta);
+                    let dx = Math.abs((this.cellWidth * (x + (obtuse ? 0: 1))) - playerPos.value[0]) + depth * this.cellWidth;
+                    let dy = dx * Math.tan(theta);
                     let col = x + (depth + 1) * (obtuse ? -1 : 1);
-                    let row = this.__getXIndex(lookingUp, playerPos.value[1], dyVertical);
+                    let row = this.__getXIndex(lookingUp, playerPos.value[1], dy);
 
                     if (this.__hitWall(row, col)) {
-                        rayCastVertical = this.__createRayCast(
-                            playerPos, 
-                            dxVertical, 
-                            dyVertical, 
-                            projMatrix, 
-                            obtuse, 
-                            lookingUp, 
-                            1
-                        );
+                        rayCastVertical = this.__createRayCast(playerPos, dx, dy, projMatrix, obtuse, lookingUp, 1);
                     }
                 }
             }
 
             // check which ray is shortest
             // both rays did not hit a wall
-            if (rayCastHorizontal == undefined && rayCastVertical == undefined) {
-                this.player.wallHits[i] = undefined;
-            } else if (rayCastHorizontal != undefined && rayCastVertical == undefined) {
+            if (rayCastHorizontal != undefined && rayCastVertical == undefined) {
                 // only horizontal wall found
                 this.player.wallHits[i] = rayCastHorizontal;
             } else if (rayCastHorizontal == undefined && rayCastVertical != undefined) {
                 // only vertical wall found
                 this.player.wallHits[i] = rayCastVertical;
+            } else if (rayCastHorizontal != undefined && rayCastVertical != undefined) {
+                // choose shortest ray if both vertical and horizontal walls are found
+                this.player.wallHits[i] = rayCastHorizontal.norm < rayCastVertical.norm ? rayCastHorizontal : rayCastVertical;
             } else {
-                // both walls found
-                if (rayCastHorizontal.norm < rayCastVertical.norm) {
-                    this.player.wallHits[i] = rayCastHorizontal;
-                } else {
-                    this.player.wallHits[i] = rayCastVertical;
-                }
+                this.player.wallHits[i] = undefined;
             }
-
         }
     }
 }
