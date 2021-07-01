@@ -5,6 +5,7 @@ class Game {
         this.map = MAP; // see map.js
         this.cellWidth = Math.floor(this.gui.canvas.width / this.map[0].length);
         this.cellHeight = Math.floor(this.gui.canvas.height / this.map.length);
+        this.maxSearchDepth = 8;
     }
 
     /**
@@ -21,6 +22,7 @@ class Game {
      * @param {int} interval update interval in ms
      */
      start(interval=15) {
+        this.__calculateRays();
         this.update();
         setInterval(this.update.bind(this), interval);
     }
@@ -58,19 +60,9 @@ class Game {
         // draw rays
         if (rays) {
             for (let i = 0; i < this.player.rays.length; i++) {
-                let ray = playerDir.add(this.player.rays[i]).transform(REFLECTION_MATRIX);
-                let [rayX, rayY] = playerPos.add(ray).value;
-                this.gui.drawLine(x, y, rayX, rayY, "red");
-
-                // debug
-                let wallh = this.player.wallHits[i];
-                if (wallh == undefined) continue;
-
-                this.gui.drawLine(
-                    x, y,
-                    wallh.value[0],
-                    wallh.value[1]
-                );
+                let ray = this.player.wallHits[i];
+                if (ray == undefined) continue;
+                this.gui.drawLine(x, y, ray.value[0], ray.value[1], "red");
             }
         }
     }
@@ -152,85 +144,85 @@ class Game {
         return Math.trunc(newX);
     }
 
+    __hitWall(row, col) {
+        return (!this.__indexOutOfBound(row, col) && this.map[row][col] > 0);
+    }
+
+    __createRayCast(playerPos, dx, dy, projMatrix, obtuse, lookingUp, side) {
+        let distVec = new Vector2d([dx, dy]);
+        let length = distVec.transform(projMatrix).length();
+        let newX = playerPos.value[0] + dx * (obtuse ? -1 : 1);
+        let newY = playerPos.value[1] + dy * (lookingUp ? -1 : 1);
+        return new HittingPoint([newX, newY], side, length);
+    }
+
     __calculateRays() {
         let xAxisVec = new Vector2d([1, 0]);
         let playerPos = this.player.position;
-        let [x, y] = this.__getCellIndices(playerPos.value[0], playerPos.value[1]);
+        let [y, x] = this.__getCellIndices(playerPos.value[0], playerPos.value[1]);
         let projMatrix = createProjectionMatrix(this.player.direction);
-        console.log(`player (i, j): (${x},${y})`);
-        for (let i = 0; i < 1; i++)  {
-            console.log(`Round: ${i}`);
-            let ray = this.player.direction.add(this.player.rays[i]).transform(REFLECTION_MATRIX);
-            ray = this.player.position.add(ray);
-            
+
+        for (let i = 0; i < this.player.rays.length; i++)  {
+            let ray = this.player.direction.add(this.player.rays[i]);
             let angleXAxis = Math.acos(ray.dot(xAxisVec) / (ray.length() * xAxisVec.length()));
             let theta = to_degrees(angleXAxis);
-            console.log(ray);
             let obtuse = false;
 
             // player is looking up if
             // ray y < player y because of reflection
-            let lookingUp = ray.value[1] < playerPos.value[1];
+            let lookingUp = playerPos.add(ray.transform(REFLECTION_MATRIX)).value[1] < playerPos.value[1];
 
             if (theta > 90) {
                 obtuse = true;
-                theta = theta - 90;
+                theta = 180 - theta;
             }
-            console.log(theta);
+
             theta = to_radians(theta);
             let rayCastHorizontal = undefined;
             let rayCastVertical = undefined;
 
-            for (let attempt = 0; attempt < 8; attempt++) {
+            for (let depth = 0; depth < this.maxSearchDepth; depth++) {
                 // check horizontal
                 if (rayCastHorizontal == undefined) {
-                    console.log(`Up: ${lookingUp}`);
-                    let dyHorizontal = Math.abs((this.cellHeight * y) - playerPos.value[1]) + (attempt + (lookingUp ? 0 : 0)) * this.cellHeight;
+                    let dyHorizontal = Math.abs((this.cellHeight * (y + (lookingUp ? 0: 1))) - playerPos.value[1]) + depth * this.cellHeight;
                     let dxHorizontal = dyHorizontal / Math.tan(theta);
-                    console.log(`dx: ${dxHorizontal}, dy: ${dyHorizontal}`);
-
-                    // let hitWallPoints = new Array(2);
-
-
-                    // if (obtuse) {
-                    //     hitWallPoints[0] = playerPos.value[0] - dxHorizontal;
-                    // } else {
-                    //     hitWallPoints[0] = playerPos.value[0] + dxHorizontal;
-                    // }
-
-                    // if (lookingUp) {
-                    //     hitWallPoints[1] = playerPos.value[1] - dyHorizontal;
-                    // } else {
-                    //     hitWallPoints[1] = playerPos.value[1] + dyHorizontal;
-                    // }
-                    // let hitWallPoints = [
-                    //     playerPos.value[0] + dxHorizontal * (obtuse ? -1 : 1),
-                    //     playerPos.value[1] + dyHorizontal * (lookingUp ? -1 : 1)
-                    // ]
-                    // let cellIndex = this.__getCellIndices(hitWallPoints[0], hitWallPoints[1]);
-                    // console.log(cellIndex);
-                    // console.log(hitWallPoints[1], hitWallPoints[0]);
-                    let row = x + (attempt + 1) * (lookingUp ? -1 : 1);
-                    let col = this.__getXIndex(obtuse, playerPos.value[1], dxHorizontal);
-                    console.log(row, col);
-                    // hitWallPoints = hitWallPoints.reverse();
+                    let row = y + (depth + (lookingUp ? 1 : 1)) * (lookingUp ? -1 : 1);
+                    let col = this.__getXIndex(obtuse, playerPos.value[0], dxHorizontal);
 
                     // check if hit wall
-                    if (!this.__indexOutOfBound(row, col) &&
-                        this.map[row][col] > 0 &&
-                        rayCastHorizontal == undefined) {
-                            console.log("wall hit");
-                            let distVec = new Vector2d([dxHorizontal, dyHorizontal]);
-                            let length = distVec.transform(projMatrix).length();
-                            let newX = playerPos.value[0] + dxHorizontal * (obtuse ? -1 : 1);
-                            let newY = playerPos.value[1] + dyHorizontal * (lookingUp ? -1 : 1);
-                            rayCastHorizontal = new HittingPoint([newX, newY], 0, length);
+                    if (this.__hitWall(row, col)) {
+                        rayCastHorizontal = this.__createRayCast(
+                            playerPos, 
+                            dxHorizontal, 
+                            dyHorizontal, 
+                            projMatrix, 
+                            obtuse, 
+                            lookingUp, 
+                            0
+                        );
                     }
                 }
                 
                 // check vertical
+                if (rayCastVertical == undefined) {
+                    let dxVertical = Math.abs((this.cellWidth * (x + (obtuse ? 0: 1))) - playerPos.value[0]) + depth * this.cellWidth;
+                    let dyVertical = dxVertical * Math.tan(theta);
+                    let col = x + (depth + 1) * (obtuse ? -1 : 1);
+                    let row = this.__getXIndex(lookingUp, playerPos.value[1], dyVertical);
+
+                    if (this.__hitWall(row, col)) {
+                        rayCastVertical = this.__createRayCast(
+                            playerPos, 
+                            dxVertical, 
+                            dyVertical, 
+                            projMatrix, 
+                            obtuse, 
+                            lookingUp, 
+                            1
+                        );
+                    }
+                }
             }
-            console.log(rayCastHorizontal);
 
             // check which ray is shortest
             // both rays did not hit a wall

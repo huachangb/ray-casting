@@ -5,7 +5,7 @@ window.onload = () => {
     perspective3D = new GUI("output", 500, 500);
     player = new Player(270, 270);
     game = new Game(map2D, player);
-    // game.start(1000);
+    game.start(30);
 };
 
 window.addEventListener("keydown", move);
