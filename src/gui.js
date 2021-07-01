@@ -1,5 +1,10 @@
 BLACK = "#000000"
 TRANSPARENT = "rgba(0,0,0,0)"
+DARK_GREEN = "40, 90, 0"
+YELLOW = "255, 244, 0"
+DARK_BLUE = "21, 0, 255"
+PURPLE = "191, 0, 255"
+RED = "255, 0, 0"
 
 class GUI {
     constructor(canvasId, width, height) {

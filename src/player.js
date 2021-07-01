@@ -9,7 +9,7 @@ class Player {
      * @param {float/int} turnRate degrees player should turn
      * @param {float/int} speed how many pixels player should move
      */
-    constructor(x, y, radius=10, fov=66, nrays=100, turnRate=10, speed=10) {
+    constructor(x, y, radius=10, fov=66, nrays=400, turnRate=10, speed=10) {
         this.position = new Vector2d([x, y]);
         this.r = radius;
         this.fov = fov;

@@ -13,9 +13,14 @@ class Game {
      * Updates screen
      */
     update() {
+        // 2d map
         this.gui.clear();
         this.drawMap();
         this.drawPlayer();
+
+        // 3d perspective
+        this.output.clear();
+        this.drawOutput();
     }
 
     /**
@@ -66,6 +71,46 @@ class Game {
                 this.gui.drawLine(x, y, ray.value[0], ray.value[1], "red");
             }
         }
+    }
+
+    drawOutput() {
+        let xOffset = 0;
+        let canvasHeight = this.output.canvas.height;
+        let maxHeight = canvasHeight - 150;
+        let nrays = this.player.rays.length
+        let widthPerRay = this.output.canvas.width / nrays;
+
+        for (let i = 0; i < nrays; i++) {
+            let ray = this.player.wallHits[i];
+            let distance = ray.norm;
+            let height =  canvasHeight + (((-canvasHeight) / maxHeight) * distance);
+            // let height = (canvasHeight - distance) / maxHeight;
+            let yOffset = (canvasHeight - height) / 2;
+            let wallColor = this.__determineWallColor(ray);
+
+            this.output.drawRectangle(xOffset, yOffset, widthPerRay, height, wallColor);
+            xOffset += widthPerRay;
+        }
+
+    }
+
+    __determineWallColor(ray) {
+        let rgb;
+        let cellVal = this.map[ray.row][ray.col];
+        let side = Boolean(ray.side);
+
+        if (cellVal == 1) {
+            rgb = side ? DARK_GREEN : YELLOW;
+        } else if (cellVal == 2) {
+            rgb = side ? DARK_BLUE : PURPLE;
+        } else {
+            rgb = side ? RED : BLACK_2;
+        }
+
+        let high = 1;
+        let low = 0.4;
+        let a = low + (((high - low) / this.output.canvas.height) * ray.norm);
+        return `rgba(${rgb}, ${a})`;
     }
 
     /**
@@ -178,12 +223,12 @@ class Game {
      * @param {bool} side 
      * @returns HittinPoint object
      */
-    __createRayCast(playerPos, dx, dy, projMatrix, obtuse, lookingUp, side) {
+    __createRayCast(playerPos, dx, dy, projMatrix, obtuse, lookingUp, side, row, col) {
         let distVec = new Vector2d([dx, dy]);
         let length = distVec.transform(projMatrix).length();
         let newX = playerPos.value[0] + dx * (obtuse ? -1 : 1);
         let newY = playerPos.value[1] + dy * (lookingUp ? -1 : 1);
-        return new HittingPoint([newX, newY], side, length);
+        return new HittingPoint([newX, newY], side, length, row, col);
     }
 
     /**
@@ -223,7 +268,7 @@ class Game {
                     let col = this.__getXIndex(obtuse, playerPos.value[0], dx);
 
                     if (this.__hitWall(row, col)) {
-                        rayCastHorizontal = this.__createRayCast(playerPos, dx, dy, projMatrix, obtuse, lookingUp, 1);
+                        rayCastHorizontal = this.__createRayCast(playerPos, dx, dy, projMatrix, obtuse, lookingUp, 1, row, col);
                     }
                 }
                 
@@ -235,7 +280,7 @@ class Game {
                     let row = this.__getXIndex(lookingUp, playerPos.value[1], dy);
 
                     if (this.__hitWall(row, col)) {
-                        rayCastVertical = this.__createRayCast(playerPos, dx, dy, projMatrix, obtuse, lookingUp, 1);
+                        rayCastVertical = this.__createRayCast(playerPos, dx, dy, projMatrix, obtuse, lookingUp, 1, row, col);
                     }
                 }
             }
