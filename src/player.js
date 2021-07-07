@@ -1,84 +1,63 @@
 class Player {
-    constructor(x, y, radius=10, fov=70, speed=10, turnRate=5, nrays=121) {
-        this.x = x;
-        this.y = y;
+    /**
+     * Constructor for class
+     * @param {float/int} x starting x
+     * @param {float/int} y starting y
+     * @param {float/int} radius size of player
+     * @param {float/int} fov field of view
+     * @param {int} nrays number of rays, must be >= 2
+     * @param {float/int} turnRate degrees player should turn
+     * @param {float/int} speed how many pixels player should move
+     */
+    constructor(x, y, radius=10, fov=66, nrays=200, turnRate=10, speed=10) {
+        this.position = new Vector2d([x, y]);
         this.r = radius;
         this.fov = fov;
-        this.orientation = 0;
         this.speed = speed;
         this.turnRate = turnRate;
-        this.rays = null;
-        this.nrays = nrays;
-        this.rayOrientations = new Array(nrays);
+        this.direction = new Vector2d([1, 0]);
+        this.cameraPlane = new Vector2d([0, this.direction.length() * Math.tan(to_radians(fov / 2))]); // formula is depended on norm of direction vector
+        this.rays = new Array(nrays);
+        this.wallHits = new Array(nrays);
 
-        let rotationPerRay = fov / (nrays - 1);
-        this.raysPerSide = (nrays - 1) / 2;
+        // calculate distance between rays on camera plane
+        let camLen = this.cameraPlane.length();
+        let normalizedCamera = this.cameraPlane.normalize();
+        let rayDiff = camLen * 2 / (nrays - 1);
+        let rayOffset = camLen;
 
-        // filll orientation array
+        // fill array with rays
         for (let i = 0; i < nrays; i++) {
-            let theta = 0;
-
-            if (i >= 1 && i < this.raysPerSide + 1) {
-                theta = i * -rotationPerRay;
-            } else if (i > this.raysPerSide) {
-                theta = (i - this.raysPerSide) * rotationPerRay;
-            }
-
-            this.rayOrientations[i] = this.orientation + theta;
+            this.rays[i] = normalizedCamera.scale(rayOffset);
+            rayOffset -= rayDiff;
         }
     }
 
     /**
-     * Turns player to the left or the right
-     * @param {string} direction Direction to turn to
+     * Rotates player
+     * @param {string} direction to rotate to, can either be 'left' or 'right'
      */
     turn(direction) {
-        for (let i = 0; i < this.nrays; i++) {
-            this.rayOrientations[i] = this.__turn(direction, this.rayOrientations[i]);
+        // create rotation matrix
+        let theta = this.turnRate * (direction == "left" ? 1 : -1);
+        let rotationMatrix = createRotationMatrix(to_radians(theta));
+
+        // rotate all vectors
+        this.direction = this.direction.transform(rotationMatrix);
+        this.cameraPlane = this.cameraPlane.transform(rotationMatrix);
+
+        for (let i = 0; i < this.rays.length; i++) {
+            this.rays[i] = this.rays[i].transform(rotationMatrix);
         }
-    }
-
-    /**
-     * Helper function for turn()
-     * @param {string} direction 
-     * @param {float} orientation 
-     * @returns 
-     */
-    __turn(direction, orientation) {
-        let theta = orientation;
-
-        // calcute new angle
-        if (direction === "right") {
-            theta = (theta + this.turnRate) % 360;
-        } else if (theta > 0 && theta < this.turnRate) {
-            // edge case if 0 < theta < turn rate
-            // this prevents a turn left to turn right
-            theta -= this.turnRate;
-        } else {
-            // 
-            let angle = Math.abs(theta - this.turnRate) % 360
-            theta = (theta <= 0) ? -angle: angle;
-        }
-
-        // upper half of circle is < 0
-        // lower hald of circle is > 0
-        if (theta > 180) {
-            theta -= 360;
-        } else if (theta <= -180) {
-            theta += 360;
-        }
-
-        // this.orientation = theta;
-        return theta;
     }
 
     /**
      * Moves player to new position
-     * @param {flaot} newX 
-     * @param {flaot} newY 
+     * @param {float} newX 
+     * @param {float} newY 
      */
     move(newX, newY) {
-        this.x = newX;
-        this.y = newY;
+        this.position.value[0] = newX;
+        this.position.value[1] = newY;
     }
 }

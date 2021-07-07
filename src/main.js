@@ -1,14 +1,10 @@
-let canvas, ctx, player, game, output;
+let map2D, perspective3D, game, player;
 
 window.onload = () => {
-    canvas = document.getElementById("canvas");
-    ctx = canvas.getContext("2d");
-    player = new Player(260, 277);
-
-    // output
-    output = document.getElementById("output");
-
-    game = new Game(ctx, canvas, player, output);
+    map2D = new GUI("canvas", 500, 500);
+    perspective3D = new GUI("output", 800, 500);
+    player = new Player(270, 270);
+    game = new Game(map2D, perspective3D, player);
     game.start();
 };
 
@@ -21,7 +17,7 @@ function move(e) {
             game.turnPlayer("left");
             break;
         case 38:
-            // up array key - forward
+            // up array key
             game.movePlayer("forward")
             break;
         case 39:
@@ -29,7 +25,7 @@ function move(e) {
             game.turnPlayer("right"); 
             break;
         case 40:
-            // down arrow key - backward
+            // down arrow key
             game.movePlayer("backward")
             break;
         default:
