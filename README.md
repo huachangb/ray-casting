@@ -9,20 +9,9 @@ This is a (very basic) JavaScript implementation of 2d ray casting. 2d ray casti
 - Arrow left: turn to the left
 - Arrow right: turn to the right
 
-# Adjustments
-Some attributes can be adjusted very easily. 
-
-### Change amount of rays
-Change ```nrays``` when creating a player object. See ```player.js```. Must be greater than 1 and must be odd.
-
-### Change field of view (FOV)
-Change ```fov``` when creating a player object. See ```player.js```. Note that FOV is in degrees.
-
-### Change the amount of pixels the player moves
-Change ```speed``` when creating a player object. See ```player.js```. This attribute is measured in pixels.
-
-### Change how many degrees the camera should shift
-Change ```turnRate``` when creating a player object. See ```player.js```. Note that FOV is in degrees.
-
-### Change game size
-Adding more cells while keeping the length and width of the canvas, change ```cellWidth``` or ```cellHeight``` when creating a game object in ```game.js```. Both attributes are measured in pixels. In the function ```createWalls()```, the 2d map can be altered. 
+# Customizable
+- Change the map layout in ```map.js```
+- Change the field of view of the player in ```player.js```
+- Change the turn rate of the player in ```player.js```
+- Change the movement speed of the player in ```player.js```
+- Change the number of rays in ```player.js```
