@@ -1,5 +1,5 @@
 class Game {
-    constructor(gui, output, player, maxSearchDepth=8) {
+    constructor(gui, output, player, maxSearchDepth=8, canvasOutputRatio=8000) {
         this.gui = gui;
         this.output = output;
         this.player = player;
@@ -7,6 +7,7 @@ class Game {
         this.cellWidth = Math.floor(this.gui.canvas.width / this.map[0].length);
         this.cellHeight = Math.floor(this.gui.canvas.height / this.map.length);
         this.maxSearchDepth = maxSearchDepth;
+        this.canvasOutputRatio = canvasOutputRatio;
     }
 
     /**
@@ -27,7 +28,7 @@ class Game {
      * Starts updating the canvas at an interval
      * @param {int} interval update interval in ms
      */
-     start(interval=30) {
+     start(interval=45) {
         this.__calculateRays();
         this.update();
         setInterval(this.update.bind(this), interval);
@@ -76,17 +77,17 @@ class Game {
     drawOutput() {
         let xOffset = 0;
         let canvasHeight = this.output.canvas.height;
-        let maxHeight = 10000;
         let nrays = this.player.rays.length
         let widthPerRay = this.output.canvas.width / nrays;
 
         for (let i = 0; i < nrays; i++) {
             let ray = this.player.wallHits[i];
             let distance = ray.norm;
-            let height = maxHeight / distance;
+            let height = this.canvasOutputRatio / distance;
             let yOffset = (canvasHeight - height) / 2;
             let wallColor = this.__determineWallColor(ray);
 
+            // draw ray
             this.output.drawRectangle(xOffset, yOffset, widthPerRay, height, wallColor, wallColor);
             xOffset += widthPerRay;
         }
@@ -306,16 +307,12 @@ class Game {
                 }
             }
 
-            // check which ray is shortest
-            // both rays did not hit a wall
+            // The shortest ray should be added
             if (rayCastHorizontal != undefined && rayCastVertical == undefined) {
-                // only horizontal wall found
                 this.player.wallHits[i] = rayCastHorizontal;
             } else if (rayCastHorizontal == undefined && rayCastVertical != undefined) {
-                // only vertical wall found
                 this.player.wallHits[i] = rayCastVertical;
             } else if (rayCastHorizontal != undefined && rayCastVertical != undefined) {
-                // choose shortest ray if both vertical and horizontal walls are found
                 this.player.wallHits[i] = rayCastHorizontal.norm < rayCastVertical.norm ? rayCastHorizontal : rayCastVertical;
             } else {
                 this.player.wallHits[i] = undefined;
