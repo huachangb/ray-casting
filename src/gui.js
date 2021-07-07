@@ -5,6 +5,7 @@ YELLOW = "255, 244, 0"
 DARK_BLUE = "21, 0, 255"
 PURPLE = "191, 0, 255"
 RED = "255, 0, 0"
+BLACK_2 = "0, 0, 0"
 
 class GUI {
     constructor(canvasId, width, height) {

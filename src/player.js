@@ -9,13 +9,13 @@ class Player {
      * @param {float/int} turnRate degrees player should turn
      * @param {float/int} speed how many pixels player should move
      */
-    constructor(x, y, radius=10, fov=66, nrays=400, turnRate=10, speed=10) {
+    constructor(x, y, radius=10, fov=66, nrays=200, turnRate=10, speed=10) {
         this.position = new Vector2d([x, y]);
         this.r = radius;
         this.fov = fov;
         this.speed = speed;
         this.turnRate = turnRate;
-        this.direction = new Vector2d([50, 0]);
+        this.direction = new Vector2d([1, 0]);
         this.cameraPlane = new Vector2d([0, this.direction.length() * Math.tan(to_radians(fov / 2))]); // formula is depended on norm of direction vector
         this.rays = new Array(nrays);
         this.wallHits = new Array(nrays);

@@ -17,6 +17,10 @@ function createProjectionMatrix(vector) {
     ];
 }
 
+function reflectVector(v, d) {
+    return d.scale((v.dot(d) / d.dot(d)) * 2).add(v.scale(-1));
+}
+
 /**
  * Creates rotatotion matrix with row vectors
  * @param {float} theta in radians

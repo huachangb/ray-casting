@@ -76,19 +76,18 @@ class Game {
     drawOutput() {
         let xOffset = 0;
         let canvasHeight = this.output.canvas.height;
-        let maxHeight = canvasHeight - 150;
+        let maxHeight = 10000;
         let nrays = this.player.rays.length
         let widthPerRay = this.output.canvas.width / nrays;
 
         for (let i = 0; i < nrays; i++) {
             let ray = this.player.wallHits[i];
             let distance = ray.norm;
-            let height =  canvasHeight + (((-canvasHeight) / maxHeight) * distance);
-            // let height = (canvasHeight - distance) / maxHeight;
+            let height = maxHeight / distance;
             let yOffset = (canvasHeight - height) / 2;
             let wallColor = this.__determineWallColor(ray);
 
-            this.output.drawRectangle(xOffset, yOffset, widthPerRay, height, wallColor);
+            this.output.drawRectangle(xOffset, yOffset, widthPerRay, height, wallColor, wallColor);
             xOffset += widthPerRay;
         }
 
@@ -213,6 +212,22 @@ class Game {
     }
 
     /**
+     * Returns adjusted dx and dy based on the
+     * direction which a player looks to
+     * @param {float} dx 
+     * @param {float} dy 
+     * @param {bool} obtuse 
+     * @param {bool} lookingUp 
+     * @returns 
+     */
+    diffXandY(dx, dy, obtuse, lookingUp) {
+        return [
+            obtuse ? -dx: dx,
+            lookingUp ? dy : -dy
+        ];
+    }
+
+    /**
      * Helper function to create a ray cast
      * @param {Arrray<int>} playerPos 
      * @param {float} dx 
@@ -223,12 +238,12 @@ class Game {
      * @param {bool} side 
      * @returns HittinPoint object
      */
-    __createRayCast(playerPos, dx, dy, projMatrix, obtuse, lookingUp, side, row, col) {
+    __createRayCast(playerPos, dx, dy, projMatrix, obtuse, lookingUp, side, row, col) {       
         let distVec = new Vector2d([dx, dy]);
         let length = distVec.transform(projMatrix).length();
-        let newX = playerPos.value[0] + dx * (obtuse ? -1 : 1);
-        let newY = playerPos.value[1] + dy * (lookingUp ? -1 : 1);
-        return new HittingPoint([newX, newY], side, length, row, col);
+        let newX = playerPos.value[0] + Math.abs(dx) * (obtuse ? -1 : 1);
+        let newY = playerPos.value[1] + Math.abs(dy) * (lookingUp ? -1 : 1);
+        return new HittingPoint([newX, newY], side, length, row, col, [dx, dy]);
     }
 
     /**
@@ -266,9 +281,12 @@ class Game {
                     let dx = dy / Math.tan(theta);
                     let row = y + (depth + 1) * (lookingUp ? -1 : 1);
                     let col = this.__getXIndex(obtuse, playerPos.value[0], dx);
+                    let coords = this.diffXandY(dx, dy, obtuse, lookingUp);
 
                     if (this.__hitWall(row, col)) {
-                        rayCastHorizontal = this.__createRayCast(playerPos, dx, dy, projMatrix, obtuse, lookingUp, 1, row, col);
+                        rayCastHorizontal = this.__createRayCast(playerPos, coords[0], coords[1], 
+                                                                 projMatrix, obtuse, lookingUp, 0, 
+                                                                 row, col, this.player.rays[i]);
                     }
                 }
                 
@@ -278,9 +296,12 @@ class Game {
                     let dy = dx * Math.tan(theta);
                     let col = x + (depth + 1) * (obtuse ? -1 : 1);
                     let row = this.__getXIndex(lookingUp, playerPos.value[1], dy);
+                    let coords = this.diffXandY(dx, dy, obtuse, lookingUp);
 
                     if (this.__hitWall(row, col)) {
-                        rayCastVertical = this.__createRayCast(playerPos, dx, dy, projMatrix, obtuse, lookingUp, 1, row, col);
+                        rayCastVertical = this.__createRayCast(playerPos, coords[0], coords[1], 
+                                                               projMatrix, obtuse, lookingUp, 1, 
+                                                               row, col, this.player.rays[i]);
                     }
                 }
             }
