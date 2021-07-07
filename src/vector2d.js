@@ -15,7 +15,7 @@ class Vector2d {
     add(v) { 
         let result = new Array(this.value.length);
 
-        for (let i = 0; i < this.value.length; i++) {
+        for (let i = 0, n = this.value.length; i < n; i++) {
             result[i] = this.value[i] + v.value[i];
         }
 
@@ -30,7 +30,7 @@ class Vector2d {
     scale(scalar) {
         let result = new Array(this.value.length);
 
-        for (let i = 0; i < this.value.length; i++) {
+        for (let i = 0, n = this.value.length; i < n; i++) {
             result[i] = this.value[i] * scalar;
         }
         
@@ -61,7 +61,7 @@ class Vector2d {
     dot(v) {
         let result = 0;
 
-        for (let i = 0; i < this.value.length; i++) {
+        for (let i = 0, n = this.value.length; i < n; i++) {
             result += this.value[i] * v.value[i];
         }
         

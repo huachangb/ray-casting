@@ -16,7 +16,7 @@ class Player {
         this.speed = speed;
         this.turnRate = turnRate;
         this.direction = new Vector2d([1, 0]);
-        this.cameraPlane = new Vector2d([0, this.direction.length() * Math.tan(to_radians(fov / 2))]); // formula is depended on norm of direction vector
+        this.cameraPlane = new Vector2d([0, this.direction.length() * Math.tan(to_radians(fov / 2))]);
         this.rays = new Array(nrays);
         this.wallHits = new Array(nrays);
 
@@ -46,7 +46,7 @@ class Player {
         this.direction = this.direction.transform(rotationMatrix);
         this.cameraPlane = this.cameraPlane.transform(rotationMatrix);
 
-        for (let i = 0; i < this.rays.length; i++) {
+        for (let i = 0, n = this.rays.length; i < n; i++) {
             this.rays[i] = this.rays[i].transform(rotationMatrix);
         }
     }
