@@ -89,6 +89,9 @@ class Game {
 
             // draw ray
             this.output.drawRectangle(xOffset, yOffset, widthPerRay, height, wallColor, wallColor);
+            this.output.drawRectangle(xOffset, yOffset + height, widthPerRay, 
+                                      this.output.canvas.height - (yOffset + height),
+                                      BLACK, BLACK)
             xOffset += widthPerRay;
         }
 
