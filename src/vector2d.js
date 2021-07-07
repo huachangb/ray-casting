@@ -42,13 +42,7 @@ class Vector2d {
      * @returns length of vector
      */
     length() {
-        let total = 0;
-
-        for (let i = 0; i < this.value.length; i++) {
-            total += this.value[i]**2;
-        }
-
-        return Math.sqrt(total);
+        return Math.sqrt(this.dot(this));
     }
 
     /**
