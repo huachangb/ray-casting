@@ -16,3 +16,26 @@ div#txtBar {
     display: flex;
     justify-content: space-between;
 }
+
+/* css for board */
+div#board {
+    /* display: flex; */
+    width: 520px;
+    height: 520px;
+    overflow: auto;
+}
+
+.btnBoard {
+    height: 50px;
+    width: 50px;
+    border: none;
+}
+
+button.btnSelected {
+    border: 1px solid black;
+    background-color: black;
+}
+
+button.containsPlayer {
+    background-color: chartreuse;
+}

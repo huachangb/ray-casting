@@ -4,17 +4,7 @@
         <meta charset="utf-8">
         <title>2D ray casting</title>
         <link rel="stylesheet" href="css/style.css">
-
-        <!-- Load scripts -->
-        <script src="src/helpers.js"></script>
-        <script src="src/vector2d.js"></script>
-        <script src="src/ray.js"></script>
-        <script src="src/linear_transformations.js"></script>
-        <script src="src/gui.js"></script>
-        <script src="src/map.js"></script>
-        <script src="src/player.js"></script>
-        <script src="src/game.js"></script>
-        <script src="src/main.js"></script>
+        <script src="src/board_init.js"></script>
     </head>    
     <body>
         <h1>
@@ -23,24 +13,12 @@
         <p>
             This is a (very simple) JavaScript implementation of 2d ray casting. 2d ray casting has been used in older games, such as Wolfenstein 3D, to render a 3d world based on a 2d map.
         </p>
-        <div class="container">
-            <div id="content">
-                <div id="txtBar">
-                    <h2 id="txt2D">2D map</h2>
-                    <h2 id="txt3D">Rendered 3D perspective</h2>
-                </div>
-                <canvas id="canvas" width="10" height="10"></canvas>
-                <canvas id="output" width="10" height="10"></canvas>
-            </div>
-        </div>
-        <div class="container">
-            <div id="manual">
-                <h2 id="headerControls">Controls</h2>
-                <p>&uarr; Move forward</p>
-                <p>&darr; Move backward</p>
-                <p>&larr; Turn to the left</p>
-                <p>&rarr; Turn to the right</p>
-            </div>
+        <div id="content">
+            <p>Create a 10x10 world. Use left mouse button to add block, right mouse to remove block.</p>
+            <div id="board"></div>
+            <button>Use default board</button>
+            <button>Random board</button>
+            <button>Create board</button>
         </div>
     </body>
 </html>
