@@ -1,5 +1,5 @@
 # 2D ray casting in JavaScript
-This is a (very basic) JavaScript implementation of 2d ray casting. 2d ray casting has been used in older games, such as Wolfenstein 3D, to render a 3d world based on a 2d map.
+This is a (very basic) JavaScript implementation of 2d ray casting. Just a fun project to learn about ray casting. 2d ray casting has been used in older games, such as Wolfenstein 3D, to render a 3d world based on a 2d map.
 
 ![Picture of implementation](./pictures/screenshot_1.png)
 
